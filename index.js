@@ -1,5 +1,6 @@
 const fs = require("fs");
 const fetch = require("node-fetch");
+const util = require("util");
 
 const httpsRegex =
   /(?:(?:https))(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#\/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[A-Z0-9+&@#\/%=~_|$])/gim;
@@ -43,29 +44,18 @@ const findGrail = async (stringified) => {
   const jsons = await Promise.all(promises);
   jsons.forEach((entry) => searchEntry(Object.entries(entry)));
   if (isGrail) {
-    console.log(
-      `Holy Grail location: ${location}. Total chest value: ${totalValue} doubloons`
-    );
     return `Holy Grail location: ${location}. Total chest value: ${totalValue} doubloons`;
   } else {
-    findGrail(JSON.stringify(jsons));
+    return findGrail(JSON.stringify(jsons));
   }
 };
-const holyGrail = async () => {
-  function readContent(callback) {
-    fs.readFile("./testData.json", "utf-8", function (err, content) {
-      if (err) return callback(err);
-      callback(null, content);
-    });
-  }
 
-  const returnValue = readContent(async function (err, content) {
-    return await findGrail(content);
-  });
-  console.log("RETURN VALUE", returnValue);
+const holyGrail = async () => {
+  const readFile = util.promisify(fs.readFile);
+  const content = await readFile("./testData.json", "utf-8");
+  return findGrail(content);
 };
+
 module.exports = holyGrail;
 
 holyGrail();
-
-// export { holyGrail };
