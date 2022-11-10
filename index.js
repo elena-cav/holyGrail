@@ -11,12 +11,13 @@ const findGrail = async (stringified) => {
   let totalValue = 0;
   const searchEntry = (entry) => {
     entry.forEach(([_, record]) => {
-      const contentsValues = Object.values(record.contents);
       const entries = Object.entries(record.contents);
-      entries.forEach(([item, { count }]) => {
-        if (item.includes("holy-grail")) {
-          location = record.location;
-          isGrail = true;
+      entries.forEach(([item, { count, value }]) => {
+        if (typeof value === "number") {
+          totalValue += value;
+        }
+        if (typeof value === "object") {
+          totalValue += value.value;
         }
         switch (item) {
           case "sapphire":
@@ -29,13 +30,9 @@ const findGrail = async (stringified) => {
             totalValue += count * 400;
             break;
         }
-      });
-      contentsValues.forEach(({ value }) => {
-        if (typeof value === "number") {
-          totalValue += value;
-        }
-        if (typeof value === "object") {
-          totalValue += value.value;
+        if (item.includes("holy-grail")) {
+          location = record.location;
+          isGrail = true;
         }
       });
     });
