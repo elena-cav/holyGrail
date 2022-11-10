@@ -1,5 +1,5 @@
-import { readFileSync } from "fs";
-import fetch from "node-fetch";
+const fs = require("fs");
+const fetch = require("node-fetch");
 
 const httpsRegex =
   /(?:(?:https))(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#\/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[A-Z0-9+&@#\/%=~_|$])/gim;
@@ -8,14 +8,36 @@ const findGrail = async (stringified) => {
   let location;
   let isGrail = false;
   const urls = stringified.match(httpsRegex) || [];
-
+  let totalValue = 0;
   const searchEntry = (entry) => {
     entry.forEach(([_, record]) => {
-      const contents = Object.keys(record.contents);
-      if (contents.includes("holy-grail")) {
-        location = record.location;
-        isGrail = true;
-      }
+      const contentsValues = Object.values(record.contents);
+      const entries = Object.entries(record.contents);
+      entries.forEach(([item, { count }]) => {
+        if (item.includes("holy-grail")) {
+          location = record.location;
+          isGrail = true;
+        }
+        switch (item) {
+          case "sapphire":
+            totalValue += count * 200;
+            break;
+          case "ruby":
+            totalValue += count * 250;
+            break;
+          case "diamond":
+            totalValue += count * 400;
+            break;
+        }
+      });
+      contentsValues.forEach(({ value }) => {
+        if (typeof value === "number") {
+          totalValue += value;
+        }
+        if (typeof value === "object") {
+          totalValue += value.value;
+        }
+      });
     });
   };
   const promises = urls
@@ -23,20 +45,30 @@ const findGrail = async (stringified) => {
     .map(async (url) => await fetchContent(url).then((res) => res));
   const jsons = await Promise.all(promises);
   jsons.forEach((entry) => searchEntry(Object.entries(entry)));
-
-  console.log("LOCATION", location);
-
   if (isGrail) {
-    return location;
+    console.log(
+      `Holy Grail location: ${location}. Total chest value: ${totalValue} doubloons`
+    );
+    return `Holy Grail location: ${location}. Total chest value: ${totalValue} doubloons`;
   } else {
     findGrail(JSON.stringify(jsons));
   }
 };
 const holyGrail = async () => {
-  const file = readFileSync("./testData.json", "utf-8");
-  const location = await findGrail(file);
-  console.log("LOCATION", location);
-  return `Holy Grail location: ${location}`;
-};
+  function readContent(callback) {
+    fs.readFile("./testData.json", "utf-8", function (err, content) {
+      if (err) return callback(err);
+      callback(null, content);
+    });
+  }
 
-export { holyGrail };
+  const returnValue = readContent(async function (err, content) {
+    return await findGrail(content);
+  });
+  console.log("RETURN VALUE", returnValue);
+};
+module.exports = holyGrail;
+
+holyGrail();
+
+// export { holyGrail };
