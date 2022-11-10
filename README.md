@@ -17,3 +17,7 @@ Holy Grail location: 20.19 -19.83
 Total chest value: 25600 doubloons
 Dead spiders: 27
 Most common boot size: 8
+
+# To run
+
+Run `node index` - tests to be fixed
