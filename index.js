@@ -9,13 +9,13 @@ let totalValue = 0;
 let deadSpiders = 0;
 const boots = {};
 const findGrail = async (stringified) => {
-  let location;
+  let grailLocation;
   let isGrail = false;
   const urls = stringified.match(httpsRegex) || [];
 
   const searchEntry = (entry) => {
-    entry.forEach(([_, record]) => {
-      const entries = Object.entries(record.contents);
+    entry.forEach(([_, { contents, location }]) => {
+      const entries = Object.entries(contents);
       entries.forEach(([item, { count, value, alive, size }]) => {
         if (typeof value === "number") {
           totalValue += value;
@@ -26,10 +26,10 @@ const findGrail = async (stringified) => {
         if (item === "spider" && !alive) {
           deadSpiders += 1;
         }
-        if (item === "boots") {
-          boots[size] ? (boots[size] += 1) : (boots[size] = 1);
-        }
         switch (item) {
+          case "boots":
+            boots[size] ? (boots[size] += 1) : (boots[size] = 1);
+            break;
           case "sapphire":
             totalValue += count * 200;
             break;
@@ -41,7 +41,7 @@ const findGrail = async (stringified) => {
             break;
         }
         if (item.includes("holy-grail")) {
-          location = record.location;
+          grailLocation = location;
           isGrail = true;
         }
       });
@@ -56,7 +56,7 @@ const findGrail = async (stringified) => {
     const commonSize = Object.keys(boots).reduce((a, b) =>
       boots[a] > boots[b] ? a : b
     );
-    return `Holy Grail location: ${location}. Total chest value: ${totalValue} doubloons. Dead spiders: ${deadSpiders}. Most common boot size: ${commonSize}`;
+    return `Holy Grail location: ${grailLocation}. Total chest value: ${totalValue} doubloons. Dead spiders: ${deadSpiders}. Most common boot size: ${commonSize}`;
   } else {
     return findGrail(JSON.stringify(jsons));
   }
